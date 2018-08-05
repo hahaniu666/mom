@@ -970,7 +970,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 title: '',
                 point: ''
             },
-            isEnd: false
+            isEnd: false,
+            timer: null,
+            sX: 0,
+            sNum: 0
         };
     },
     components: {
@@ -986,6 +989,28 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         }
     },
     methods: {
+        touchS(e) {
+            this.sX = e.changedTouches[0].pageX;
+        },
+        touchE(e) {
+
+            let t = this.sNum;
+            if (e.changedTouches[0].pageX - this.sX < -50) {
+                t++;
+            } else if (e.changedTouches[0].pageX - this.sX > 50) {
+                t--;
+            };
+            if (t > this.list.length - 1 || t == this.list.length - 1) {
+                t = 0;
+            } else if (t < 0) {
+                t = this.list.length - 1;
+            }
+            console.log(t);
+            this.clickCenter(this.list[t]);
+            this.wechat = this.list[t].momWechat;
+            this.showList = this.list[t];
+            this.sNum = t;
+        },
         drawMap: function () {
 
             let _this = this;
@@ -1033,7 +1058,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                         small = lat + lng;
                     }
                 }
-                _this.clickCenter(_this.list[aList.indexOf(small)]);
+                _this.clickCenter(_this.list[aList.indexOf(small)], true);
                 _this.wechat = _this.list[aList.indexOf(small)].momWechat;
                 _this.showList = _this.list[aList.indexOf(small)];
 
@@ -1133,8 +1158,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 }
             }, "addr");
         },
-        clickCenter: function (org) {
+        clickCenter: function (org, o) {
             this.map.centerAndZoom(org.point, 16);
+            if (o) {
+                clearInterval(this.timer);
+            }
         },
         addMarker: function (point, addr, title, index) {
             var myIcon = new BMap.Icon("http://api.map.baidu.com/img/markers.png", new BMap.Size(23, 25), {
@@ -1246,7 +1274,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             return openInfoWinFun;
         },
         onCopy(e) {
-            // console.log('12', e);
             this.copyOnoff = true;
         },
         onError(e) {
@@ -1277,8 +1304,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         }
     },
     mounted() {
-        // this.loadBMapScript();
-        console.log(document.body.clientWidth);
+
         if (this.$route.query.type) {
             this.type = this.$route.query.type;
             let newArr = this.list.filter((elem, i) => {
@@ -1288,13 +1314,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             });
             this.wechat = newArr[0].momWechat;
             this.showList = newArr[0];
-            //
-            // this.result.addr = newArr[0].address;
-            // this.result.title = newArr[0].name;
-            //
-            // console.log('this.result', this.result, newArr[0]);
-            //
-            // this.getPointItem(this.result, 1);
         } else {
             this.wechat = this.list[0].momWechat;
             this.showList = this.list[0];
@@ -1302,7 +1321,18 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         if (localStorage.getItem('isFirst')) {
             this.isFirst = false;
         }
-
+        // let t = this.$route.query.type || 0;
+        // this.timer = setInterval(()=>{
+        //     if(t==(this.list.length-1)){
+        //         t = 0;
+        //     }
+        //     else{
+        //         t++;
+        //     }
+        //     this.clickCenter(this.list[t]);
+        //     this.wechat = this.list[t].momWechat;
+        //     this.showList = this.list[t];
+        // },5000)
         this.$nextTick(function () {
             this.drawMap();
         });
@@ -1853,6 +1883,14 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     staticClass: "message-wrap",
     class: {
       active: !_vm.isActive
+    },
+    on: {
+      "touchstart": function($event) {
+        _vm.touchS($event)
+      },
+      "touchend": function($event) {
+        _vm.touchE($event)
+      }
     }
   }, [_c('div', {
     staticClass: "message-box"
@@ -1862,7 +1900,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     staticClass: "mes-left",
     on: {
       "click": function($event) {
-        _vm.clickCenter(_vm.result)
+        _vm.clickCenter(_vm.result, true)
       }
     }
   }, [_c('div', {
@@ -1897,7 +1935,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     staticClass: "m-b-right",
     on: {
       "click": function($event) {
-        _vm.clickCenter(_vm.result)
+        _vm.clickCenter(_vm.result, true)
       }
     }
   }, [_c('div', {
